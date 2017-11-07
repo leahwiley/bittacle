@@ -1,20 +1,19 @@
 ;var bittacle = bittacle || (function(){
-	var oC={},oF={},oL={},oS={},clock=new Date,
+	var oP={},oC={},oF={},oL={},oS={},clock=new Date,
 		gimbals={ck:false,ls:false,ss:false},
 		oU={
 			host : window.location.hostname,
 			path : window.location.pathname,
 			protcol : window.location.protocol,
 			query : window.location.search,
-			href : window.location.href,
-			params : {}
+			href : window.location.href
 		};
 	var qString = (oU.query.length && oU.query.substring(0,1) === '?')? oU.query.substring(1) : oU.query;
 	var aPairs = qString.split('&');
 	for(var i=0;i<aPairs.length;i++) {
 		var aKeyVal = aPairs[i].split('=');
 		if(aKeyVal[0].trim().length){
-			oU.params[aKeyVal[0].trim()] = (aKeyVal[1])? aKeyVal[1].trim() : true;
+			oP[aKeyVal[0].trim()] = (aKeyVal[1])? aKeyVal[1].trim() : true;
 		}
 	}
 	if(!navigator.cookieEnabled){
@@ -54,22 +53,71 @@
 		}
 	}
 	var APP = {
-		url : function() { return oU; },
-		cookies : function() { return oC; },
-		forms : function() { return oF; },
-		storage : {
-			local : function () {
-				try { return localStorage; } catch (err) { return {}; }
+		url : {
+			src : function() { return oU.href; },
+			get : function(k) {
+				return (oU.hasOwnProperty(k))? oU[k] : null;
 			},
-			session : function () {
-				try { return sessionStorage; } catch (err) { return {}; }
+			data : function() { return oU; }
+		},
+		params : {
+			src : function() { return oU.query; },
+			get : function(k) {
+				return (oP.hasOwnProperty(k))? oP[k] : null;
+			},
+			data : function() { return oP; }
+		},
+		cookies : {
+			src : function() { return document.cookie; },
+			simulated : function() { return gimbals.ck; },
+			get : function(k) {
+				return (oC.hasOwnProperty(k))? oC[k] : null;
+			},
+			// set,
+			// change expiration
+			data : function() { return oC; }
+		},
+		storage : {
+			local : {
+				simulated : function() { return gimbals.ls; },
+				data : function() { return (!gimbals.ls)? oL : localStorage; },
+				get : function(k) {
+					if(gimbals.ls){
+						return (oL.hasOwnProperty(k))? oL[k] : null;
+					} else {
+						return localStorage.getItem(k);
+					}
+				},
+				set : function(k,v) {
+					if(gimbals.ls){
+						oL[k] = v;
+					} else {
+						localStorage.setItem(k,v);
+					}
+				}
+			},
+			session : {
+				simulated : function() { return gimbals.ss; },
+				data : function() { return (!gimbals.ss)? oL : sessionStorage; },
+				get : function(k) {
+					if(gimbals.ss){
+						return (oS.hasOwnProperty(k))? oS[k] : null;
+					} else {
+						return sessionStorage.getItem(k);
+					}
+				},
+				set : function(k,v) {
+					if(gimbals.ss){
+						oS[k] = v;
+					} else {
+						sessionStorage.setItem(k,v);
+					}
+				}
 			}
 		},
+		forms : function() { return oF; },
 		clock : function() {
 			return clock;
-		},
-		isSimulated : function() {
-			return gimbals;
 		},
 		read : function() {
 			if(!gimbals.ck) readCookies();
@@ -80,37 +128,6 @@
 	return APP;
 })();
 /*
-	AECookie = (function(){
-		var APP = {
-			init:function() {
-				APP.props = {};
-				APP.refresh();
-			},
-			refresh:function() {
-				//console.log(document.cookie);
-				var arrCookies = document.cookie.split('; ');
-				for(var i=0;i<arrCookies.length;i++) {
-					var arrCookie = arrCookies[i].split('=');
-					APP.props[arrCookie[0]] = arrCookie[1];
-				}
-				//console.log(APP.props);
-			},
-			read:function(name) {
-				APP.refresh();
-				if (name && name.length){
-					return APP.props[name];
-				} else {
-					return APP.props;
-				}
-			},
-			update:function(name,value,daysToLive,encodeValue) {
-				// THIS FUNCTION ALWAYS RESETS THE VALUE AND EXPIRATION OF THE COOKIE
-				APP.create(name,value,daysToLive,encodeValue);
-			},
-			exists:function(name){
-				var exists = (document.cookie.indexOf(name) > -1) ? true : false;
-				return exists;
-			},
 			expire:function(name,daysToLive){
 				cookieValue = APP.read(name);
 				if(cookieValue || typeof cookieValue === 'string'){
