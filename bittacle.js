@@ -1,5 +1,5 @@
 ;var bittacle = bittacle || (function(){
-	var oP={},oC={},oF={},oL={},oS={},clock=new Date(),
+	var oP={},oC={},oF={},oL={},oS={},oV={},clock=new Date(),
 		gimbals={ck:!navigator.cookieEnabled,ls:false,ss:false},
 		oU={
 			host : window.location.hostname,
@@ -112,6 +112,13 @@
 						sessionStorage.removeItem(k)
 					}
 				}
+			},
+			virtual : {
+				simulated : function() { return true; },
+				data : function() { return oV; },
+				get : function(k) {	return (oV.hasOwnProperty(k))? oS[k] : null; },
+				set : function(k,v) { oV[k] = v; },
+				delete : function(k) { if(oV.hasOwnProperty(k)) delete oS[k]; }
 			}
 		},
 		forms : {
